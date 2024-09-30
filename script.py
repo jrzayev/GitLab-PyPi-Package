@@ -173,11 +173,18 @@ def clone_all_pypi_packages_from_src_to_dst(gitlab_username, gitlab_token, gitla
 
 def delete_all_pypi_packages(gitlab_server, gitlab_token, project_id):
     gitlab_api_server = f"{gitlab_server}/api/v4"
-    headers = {'PRIVATE-TOKEN': gitlab_token}
-    for package_id in get_pypi_project_id_list(gitlab_server, gitlab_token, project_id):
-        api_endpoint = f"{gitlab_api_server}/projects/{project_id}/packages/{package_id}"
-        response = requests.delete(url=api_endpoint, headers=headers)
-        print(response.text)
+    confirmation = input(f"Are you sure you want to delete all PyPI packages from project {project_id}? Type 'yes' to confirm: ")
+    if confirmation.lower() == 'yes':
+        headers = {'PRIVATE-TOKEN': gitlab_token}
+        package_ids = get_pypi_project_id_list(gitlab_server, gitlab_token, project_id)
+        if not package_ids:
+            print("No packages found to delete.")
+            return
+        for package_id in package_ids:
+            api_endpoint = f"{gitlab_server}/projects/{project_id}/packages/{package_id}"
+            response = requests.delete(url=api_endpoint, headers=headers)
+    else:
+        print("Deletion cancelled.")
 
 
 def parse_args():
