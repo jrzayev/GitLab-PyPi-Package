@@ -88,9 +88,9 @@ def sso_authenticate(gitlab_server):
             user_response = requests.get(f"{gitlab_server}{GITLAB_API_URL}", headers=headers)
 
             if user_response.status_code == 200:
-                gitlab_username = user_response.json()["username"]
-                print(f"Authenticated as {gitlab_username}")
-                return access_token, gitlab_username
+                gitlab_user = user_response.json()["username"]
+                print(f"Authenticated as {gitlab_user}")
+                return access_token, gitlab_user
             else:
                 print("Failed to fetch user information")
         else:
@@ -141,13 +141,13 @@ def get_uniq_pypi_package_name_and_version_csv(gitlab_server, gitlab_token, proj
             writer.writerow([package_info['name'], package_info['version']])
 
 
-def clone_all_pypi_packages_from_src_to_dst(gitlab_username, gitlab_token, gitlab_server, src_project_id,
+def clone_all_pypi_packages_from_src_to_dst(gitlab_user, gitlab_token, gitlab_server, src_project_id,
                                             dst_project_id):
     gitlab_api_server = f"{gitlab_server}/api/v4"
     headers = {'PRIVATE-TOKEN': gitlab_token}
     temporary_cache = []
     twine_api_endpoint = f"{gitlab_api_server}/projects/{dst_project_id}/packages/pypi"
-    os.environ["TWINE_USERNAME"] = gitlab_username
+    os.environ["TWINE_USERNAME"] = gitlab_user
     os.environ["TWINE_PASSWORD"] = gitlab_token
     for package_id in get_pypi_project_id_list(gitlab_server, gitlab_token, src_project_id):
         package_info = get_pypi_package_info(gitlab_server, gitlab_token, src_project_id, package_id)
@@ -188,18 +188,25 @@ def delete_all_pypi_packages(gitlab_server, gitlab_token, project_id):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Manage PyPI packages in GitLab.")
+    parser = argparse.ArgumentParser(
+        description="Manage PyPI packages in GitLab using SSO authentication or GitLab token.",
+        formatter_class=argparse.RawTextHelpFormatter  # Preserve formatting in help text
+    )
 
-    parser.add_argument("action", choices=["package_info", "clone", "get_csv", "delete"],
-                        help="""Action to perform:
-                                'package_info' - Get information about a specific PyPI package.
-                                'clone' - Clone all PyPI packages from the source GitLab project to the destination project.
-                                'get_csv' - Generate a CSV with unique PyPI package names and versions from the specified project.
-                                'delete' - Delete all PyPI packages from the specified project.""")
+    parser.add_argument(
+        "action",
+        choices=["package_info", "clone", "get_csv", "delete"],
+        help=(
+            "- package_info: Get information about a specific PyPI package.\n"
+            "- clone: Clone all PyPI packages from the source GitLab project to the destination project.\n"
+            "- get_csv: Generate a CSV with unique PyPI package names and versions from the specified project.\n"
+            "- delete: Delete all PyPI packages from the specified project."
+        )
+    )
 
     parser.add_argument("--gitlab_server", required=True, help="GitLab server URL")
     parser.add_argument("--gitlab_token", required=False, help="GitLab private token (ignored if SSO is used)")
-    parser.add_argument("--gitlab_username", required=False, help="GitLab username (can be obtained via SSO)")
+    parser.add_argument("--gitlab_user", required=False, help="GitLab username (can be obtained via SSO)")
     parser.add_argument("--src_project_id", required=False, help="Source GitLab project ID (required for cloning)")
     parser.add_argument("--dst_project_id", required=False, help="Destination GitLab project ID (required for cloning)")
     parser.add_argument("--project_id", required=False,
@@ -215,18 +222,18 @@ if __name__ == "__main__":
     args = parse_args()
 
     if args.sso:
-        gitlab_token, gitlab_username = sso_authenticate(args.gitlab_server)
-        if gitlab_username is None or gitlab_token is None:
+        gitlab_token, gitlab_user = sso_authenticate(args.gitlab_server)
+        if gitlab_user is None or gitlab_token is None:
             print("There is a problem with SSO authentication")
             exit(1)
-        print(f"Authenticated with SSO, using token: {gitlab_token} and username: {gitlab_username}")
+        print(f"Authenticated with SSO, using token: {gitlab_token} and username: {gitlab_user}")
     else:
         gitlab_token = args.gitlab_token
-        gitlab_username = args.gitlab_username
+        gitlab_user = args.gitlab_user
         if not gitlab_token:
             print("GitLab token is required if SSO is not used.")
             exit(1)
-        elif not gitlab_username and args.action == "clone":
+        elif not gitlab_user and args.action == "clone":
             print("GitLab username is required for cloning if SSO is not used.")
             exit(1)
 
@@ -242,7 +249,7 @@ if __name__ == "__main__":
             print("Source project ID and Destination project ID are required for cloning.")
             exit(1)
         else:
-            clone_all_pypi_packages_from_src_to_dst(gitlab_username, gitlab_token,
+            clone_all_pypi_packages_from_src_to_dst(gitlab_user, gitlab_token,
                                                     args.gitlab_server, args.src_project_id,
                                                     args.dst_project_id)
 

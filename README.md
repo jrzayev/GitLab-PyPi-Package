@@ -44,17 +44,17 @@ pip install requests lxml twine
 
 ## Command-Line Arguments
 
-| Argument            | Description                                                                                  |
-|---------------------|----------------------------------------------------------------------------------------------|
-| `action`            | The action to perform. Choices are: `package_info`, `clone`, `get_csv`, `delete`.            |
-| `--gitlab_server`   | GitLab server URL. This is required for all actions.                                         |
-| `--gitlab_token`    | GitLab private token (optional if SSO is used).                                              |
-| `--gitlab_username` | GitLab username (optional if SSO is used or required for cloning).                           |
-| `--src_project_id`  | Source GitLab project ID (required for cloning).                                             |
-| `--dst_project_id`  | Destination GitLab project ID (required for cloning).                                        |
-| `--project_id`      | GitLab project ID (required for CSV generation, package info, or deletion).                  |
-| `--package_id`      | Package ID for retrieving specific package information (required for `package_info` action). |
-| `--sso`             | Use SSO authentication to obtain GitLab token and username.                                  |
+| Argument               | Description                                                                                  |
+|------------------------|----------------------------------------------------------------------------------------------|
+| `action`               | The action to perform. Choices are: `package_info`, `clone`, `get_csv`, `delete`.            |
+| `--gitlab_server`      | GitLab server URL. This is required for all actions.                                         |
+| `--gitlab_token`       | GitLab private token (optional if SSO is used).                                              |
+| `--gitlab_user`        | GitLab username (optional if SSO is used or required for cloning).                           |
+| `--src_project_id`     | Source GitLab project ID (required for cloning).                                             |
+| `--dst_project_id`     | Destination GitLab project ID (required for cloning).                                        |
+| `--project_id`         | GitLab project ID (required for CSV generation, package info, or deletion).                  |
+| `--package_id`         | Package ID for retrieving specific package information (required for `package_info` action). |
+| `--sso`                | Use SSO authentication to obtain GitLab token and username.                                  |
 
 ## SSO Authentication Details
 
@@ -76,13 +76,13 @@ Clones all PyPI packages from the source GitLab project to the destination GitLa
 **Required Arguments**:
 - `--gitlab_server`
 - `--gitlab_token` or `--sso`
-- `--gitlab_username` (if SSO is not used)
+- `--gitlab_user` (if SSO is not used)
 - `--src_project_id`
 - `--dst_project_id`
 
 **Example Usage**:
 ```bash
-python script.py clone --gitlab_server "https://gitlab.example.com" --gitlab_token "your_token" --gitlab_username "your_username" --src_project_id "123" --dst_project_id "456"
+python script.py clone --gitlab_server "https://gitlab.example.com" --gitlab_token "your_token" --gitlab_user "your_username" --src_project_id "123" --dst_project_id "456"
 ```
 
 With SSO:
@@ -147,7 +147,7 @@ python script.py delete --gitlab_server "https://gitlab.example.com" --sso --pro
 
 ## Authentication via SSO
 
-If you want to authenticate via GitLab's Single Sign-On (SSO), you can pass the `--sso` flag. When using SSO, you do not need to provide `--gitlab_token` or `--gitlab_username`, as these will be retrieved automatically via OAuth2 authentication.
+If you want to authenticate via GitLab's Single Sign-On (SSO), you can pass the `--sso` flag. When using SSO, you do not need to provide `--gitlab_token` or `--gitlab_user`, as these will be retrieved automatically via OAuth2 authentication.
 
 **Example Usage**:
 ```bash
